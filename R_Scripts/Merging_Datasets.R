@@ -2,10 +2,8 @@
 #Written by Taylor Lindsay Summer '22
 
 # Packages & Data Import  -------------------------------------------------
-
 # Import Libraries
 library(tidyverse)
-
 # Import Data 
 raw_calice <- read.csv('~/Desktop/GITHUB/CF_2022/Transplants_Calice_Master.csv')
 raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
@@ -53,27 +51,105 @@ raw_master$Label <- raw_master$Label %>%
 
 raw_master$Sample <- raw_master$Sample %>% 
   gsub("OHS2", "0HS2", .) 
+#remove .jpg
+raw_calice$Label <- raw_calice$Label %>% 
+  gsub(".JPG", "", .)
+
   
-# Remove unneeded sample names from CALICE FILE 
-#raw_calice$Label <- raw_calice
+#remove excess columns from raw_master if needed 
+raw_master <- select(raw_master, -c('X'))
+raw_calice <- select(raw_calice, -c('X'))
 
 # rewrite the files 
 write.csv(raw_calice, '~/Desktop/GITHUB/TLPR21/Transplants_Calice_Master.csv')
 write.csv(raw_master, '~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
 
+
+# Create summary dataset  -------------------------------------------------
+
+#Seperating ID's
+raw_calice2 <-separate(raw_calice, Label, into= c("Species", "Treatment", "Sample", "Replicate"), sep = "_", remove = FALSE,)
+
+#combining treatment and species values
+raw_calice2 <- raw_calice2 %>%
+  unite('Full_Treatment', Species:Treatment, remove= FALSE)
+
+#Merge multiple calices per sample
+calice_W_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="W") %>%
+  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
+  summarise(., mean_W = mean(Length)) 
+
+calice_H_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="H") %>%
+  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
+  summarise(., mean_H = mean(Length)) 
+
+calice_CW_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="CW") %>%
+  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
+  summarise(., mean_CW = mean(Length)) 
+
+calice_CH_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="CH") %>%
+  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
+  summarise(., mean_CH = mean(Length)) 
+
+calice_A_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="A") %>%
+  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
+  summarise(., mean_A = mean(Area)) 
+
+calice_CA_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="CA") %>%
+  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
+  summarise(., mean_CA = mean(Area))
+
+calice_HW_merged <- merge(x= calice_W_means, y=calice_H_means, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
+calice_C_merged <- merge(x= calice_CW_means, y=calice_CH_means, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
+calice_A_merged <- merge(x= calice_A_means, y=calice_CA_means, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
+
+calice_new_merged <- merge(x= calice_HW_merged, y=calice_C_merged, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
+calice_merged_averages <-merge(x= calice_new_merged, y=calice_A_merged, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
+
+write.csv(calice_merged_averages, '~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv')
+
+
 # Merge morphology dataset with master ------------------------------------
 
 # Merge the two datasets by the label 
-merged <- merge(x= raw_master, y=raw_calice, by= 'Label', all=T)
+merged <- merge(x= raw_master, y=merged2, by= c('Label','Species','Treatment','Sample'), all=T)
+merged_clean <- select(merged, -c('X'))
 
 write.csv(merged, '~/Desktop/GITHUB/TLPR21/Transplants_Calices_Merged.csv')
 
-NAS <- merged[is.na(c(merged$Min)),]
-wrong_label <-NAS[(NAS$Airbrush_Date==""),]
-need_data <-NAS[!(NAS$Species=="PRACTICE" | NAS$Airbrush_Date=="MISSING"),]
+#merge in the transplants calice density data 
 
+# Adding Calice density into the calice averages data sheet ---------------
+
+
+calice_density <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/Transplants_Calice_Density.csv')
+calice_master <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv')
+
+merged2 <- merge(x=calice_master, y=calice_density[,c("Label","Calice_Density")], by= "Label")
+
+write.csv(merged2, '~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv')
+
+# Figure out which ones are missing  --------------------------------------
+
+#subset the samples with NA values 
+NAS <- merged[is.na(c(merged$Min)),]
+#Look for samples with no value for airbrush date 
+wrong_label <-NAS[(NAS$Airbrush_Date==""),]
+#Save file of the ones that are missing data 
+need_data <-NAS[!(NAS$Species=="PRACTICE" | NAS$Airbrush_Date=="MISSING"),]
 # save the file 
 write.csv(need_data, '~/Desktop/Need_Data.csv')
+
+
+
+
+
 
 
 
