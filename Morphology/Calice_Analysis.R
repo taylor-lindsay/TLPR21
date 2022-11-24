@@ -11,9 +11,10 @@ library(ggplot2)
 library("gridExtra")
 library("cowplot")
 library(ggpubr)
+library("RColorBrewer")
 
 # Import data 
-raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv')
+raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv') 
 
 
 # General boxplot graphs ------------------------------------------------------------------
@@ -69,18 +70,36 @@ ggsave("plot_calice_D.jpg", plot = plot_D, path = '~/Desktop/GITHUB/TLPR21/Morph
 
 #filter to just have OFRA data 
 raw_OFRA <- raw_calice %>%
-  filter(Species == "OFRA")
+  filter(Species == "OFRA") %>%
+  filter(Treatment == c("PP", "PS"))
 
 #make dataset long 
 raw_OFRA_long <- pivot_longer(raw_OFRA,cols = c(mean_W, mean_CW, mean_H, mean_CH, mean_A, mean_CA),
                        names_to = "measurement")
 
+# replace col names to be more appropriate for graph 
+raw_OFRA_long$measurement <- raw_OFRA_long$measurement %>%
+  gsub("mean_W","W", .) %>%
+  gsub("mean_H","H", .) %>%  
+  gsub("mean_A","A", .) %>%
+  gsub("mean_CW","CW", .) %>%
+  gsub("mean_CH","CH", .) %>%
+  gsub("mean_CA","CA", .) 
+
+measurement_order <- c('A', 'CA', 'H', 'CH', 'W', 'CW') 
+
 #make graph of calice measurements 
-plots_OFRA <- ggplot(raw_OFRA_long, aes(x=measurement, y=value, color=Treatment)) +
+plots_OFRA <- ggplot(raw_OFRA_long, aes(x=factor(measurement, level = measurement_order), y=value, fill = Treatment)) +
   geom_boxplot() +
-  labs(y= "Mean Width", x = "Treatment")
+  labs(y= "Mean Width", x = "Treatment")+
+  theme_bw() +
+  scale_fill_manual(values = c("cyan4",  "goldenrod"))
+
+plots_OFRA
+
 #save graph
 ggsave("plot_OFRA_Calice.jpg", plot = plots_OFRA, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
+
 # compare means
 plots_OFRA_pvalues <- plots_OFRA + stat_compare_means(method = "t.test", size = 2)
 ggsave("plot_OFRA_pvalues.jpg", plot = plots_OFRA_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
@@ -91,6 +110,7 @@ plot_D_OFRA <- ggplot(raw_OFRA, aes(x=Treatment, y=Calice_Density)) +
   labs(y= "Calice Density", x = "Treatment")
 plots_OFRA_D_pvalues <- plot_D_OFRA + stat_compare_means(method = "t.test", size = 2)
 ggsave("plot_OFRA_D_pvalues.jpg", plot = plots_OFRA_D_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
+
 
 
 # OFAV Control Graphs -----------------------------------------------------------
@@ -104,20 +124,36 @@ raw_OFAV_control <- raw_calice %>%
 raw_OFAV_control_long <- pivot_longer(raw_OFAV_control,cols = c(mean_W, mean_CW, mean_H, mean_CH, mean_A, mean_CA),
                               names_to = "measurement")
 
+# replace col names to be more appropriate for graph 
+raw_OFAV_control_long$measurement <- raw_OFAV_control_long$measurement %>%
+  gsub("mean_W","W", .) %>%
+  gsub("mean_H","H", .) %>%  
+  gsub("mean_A","A", .) %>%
+  gsub("mean_CW","CW", .) %>%
+  gsub("mean_CH","CH", .) %>%
+  gsub("mean_CA","CA", .) 
+
 #make graph of calice measurements 
-plots_OFAV_control <- ggplot(raw_OFAV_control_long, aes(x=measurement, y=value, color=Treatment)) +
+plots_OFAV_control <- ggplot(raw_OFAV_control_long, aes(x=factor(measurement, level = measurement_order), y=value, fill=Treatment)) +
   geom_boxplot() +
-  labs(y= "Mean Width", x = "Treatment")
+  labs(y= "Mean Width", x = "Treatment") +
+  theme_bw() +
+  scale_fill_manual(values = c("cyan4", "goldenrod"))
+
+plots_OFAV_control
+
 # compare means
 plots_OFAV_control_pvalues <- plots_OFAV_control + stat_compare_means(method = "t.test", size = 2)
-ggsave("plots_OFAV_control_pvalues.jpg", plot = plots_OFAV_control_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
+ggsave("plot_OFAV_control_pvalues.jpg", plot = plots_OFAV_control_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
 
 #compare Density of OFAV Controls
 plot_D_OFAV_control <- ggplot(raw_OFAV_control, aes(x=Treatment, y=Calice_Density)) +
   geom_boxplot() +
   labs(y= "Calice Density", x = "Treatment")
-plots_OFAV_control_D_pvalues <- plot_D_OFAV_control + stat_compare_means(method = "t.test", size = 2)
+plot_OFAV_control_D_pvalues <- plot_D_OFAV_control + stat_compare_means(method = "t.test", size = 2)
 ggsave("plot_OFAV_control_D_pvalues.jpg", plot = plots_OFAV_control_D_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
+
+
 
 
 
@@ -132,13 +168,29 @@ raw_OFAV_PPvPS <- raw_calice %>%
 raw_OFAV_PPvPS_long <- pivot_longer(raw_OFAV_PPvPS,cols = c(mean_W, mean_CW, mean_H, mean_CH, mean_A, mean_CA),
                                       names_to = "measurement")
 
+# replace col names to be more appropriate for graph 
+raw_OFAV_PPvPS_long$measurement <- raw_OFAV_PPvPS_long$measurement %>%
+  gsub("mean_W","W", .) %>%
+  gsub("mean_H","H", .) %>%  
+  gsub("mean_A","A", .) %>%
+  gsub("mean_CW","CW", .) %>%
+  gsub("mean_CH","CH", .) %>%
+  gsub("mean_CA","CA", .) 
+
 #make graph of calice measurements 
-plots_OFAV_PPvPS <- ggplot(raw_OFAV_PPvPS_long, aes(x=measurement, y=value, color=Treatment)) +
+plots_OFAV_PPvPS <- ggplot(raw_OFAV_PPvPS_long, aes(x=factor(measurement, level = measurement_order), y=value, fill=Treatment)) +
   geom_boxplot() +
-  labs(y= "Mean Width", x = "Treatment")
+  labs(y= "Mean Width", x = "Treatment")+
+  theme_bw() +
+  scale_fill_manual(values = c("cyan4", "goldenrod"))
+
+
+
+
 # compare means
 plots_OFAV_PPvPS_pvalues <- plots_OFAV_PPvPS + stat_compare_means(method = "t.test", size = 2)
-ggsave("plots_OFAV_PPvPS_pvalues.jpg", plot = plots_OFAV_PPvPS_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
+ggsave("plot_OFAV_PPvPS_pvalues.jpg", plot = plots_OFAV_PPvPS_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
+
 
 #compare Density of OFAV Controls
 plot_D_OFAV_PPvPS <- ggplot(raw_OFAV_PPvPS, aes(x=Treatment, y=Calice_Density)) +
@@ -160,13 +212,25 @@ raw_OFAV_SSvSP <- raw_calice %>%
 raw_OFAV_SSvSP_long <- pivot_longer(raw_OFAV_SSvSP,cols = c(mean_W, mean_CW, mean_H, mean_CH, mean_A, mean_CA),
                                     names_to = "measurement")
 
+# replace col names to be more appropriate for graph 
+raw_OFAV_SSvSP_long$measurement <- raw_OFAV_SSvSP_long$measurement %>%
+  gsub("mean_W","W", .) %>%
+  gsub("mean_H","H", .) %>%  
+  gsub("mean_A","A", .) %>%
+  gsub("mean_CW","CW", .) %>%
+  gsub("mean_CH","CH", .) %>%
+  gsub("mean_CA","CA", .) 
+
 #make graph of calice measurements 
-plots_OFAV_SSvSP <- ggplot(raw_OFAV_SSvSP_long, aes(x=measurement, y=value, color=Treatment)) +
+plots_OFAV_SSvSP <- ggplot(raw_OFAV_SSvSP_long, aes(x=factor(measurement, level = measurement_order), y=value, fill=Treatment)) +
   geom_boxplot() +
-  labs(y= "Mean Width", x = "Treatment")
+  labs(y= "Mean Width", x = "Treatment")+
+  theme_bw() +
+  scale_fill_manual(values = c("cyan4", "goldenrod"))
+
 # compare means
 plots_OFAV_SSvSP_pvalues <- plots_OFAV_SSvSP + stat_compare_means(method = "t.test", size = 2)
-ggsave("plots_OFAV_SSvSP_pvalues.jpg", plot = plots_OFAV_SSvSP_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
+ggsave("plot_OFAV_SSvSP_pvalues.jpg", plot = plots_OFAV_SSvSP_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
 
 #compare Density of OFAV Controls
 plot_D_OFAV_SSvSP <- ggplot(raw_OFAV_SSvSP, aes(x=Treatment, y=Calice_Density)) +
