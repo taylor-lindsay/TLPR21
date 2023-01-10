@@ -13,11 +13,11 @@ library("cowplot")
 library(ggpubr)
 library("RColorBrewer")
 
+# TL_Trans Import & first boxplots ------------------------------------------------------------------
+
 # Import data 
 raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv') 
 
-
-# General boxplot graphs ------------------------------------------------------------------
 
 #width 
 plot_W <- ggplot(raw_calice, aes(x=Treatment, y=mean_W, color=Species)) +
@@ -66,7 +66,7 @@ plot_D <- ggplot(raw_calice, aes(x=Treatment, y=Calice_Density, color=Species)) 
 #save 
 ggsave("plot_calice_D.jpg", plot = plot_D, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
 
-# OFRA Graphs -------------------------------------------------------------
+# TL_Trans OFRA Graphs -------------------------------------------------------------
 
 #filter to just have OFRA data 
 raw_OFRA <- raw_calice %>%
@@ -113,7 +113,7 @@ ggsave("plot_OFRA_D_pvalues.jpg", plot = plots_OFRA_D_pvalues, path = '~/Desktop
 
 
 
-# OFAV Control Graphs -----------------------------------------------------------
+# TL_Trans OFAV Control Graphs -----------------------------------------------------------
 
 #filter to just have OFAV data 
 raw_OFAV_control <- raw_calice %>%
@@ -157,7 +157,7 @@ ggsave("plot_OFAV_control_D_pvalues.jpg", plot = plots_OFAV_control_D_pvalues, p
 
 
 
-# OFAV PP PS --------------------------------------------------------------
+# TL_Trans OFAV PP PS --------------------------------------------------------------
 
 #filter to just have OFAV data 
 raw_OFAV_PPvPS <- raw_calice %>%
@@ -201,7 +201,7 @@ ggsave("plot_OFAV_PPvPS_D_pvalues.jpg", plot = plot_D_OFAV_PPvPS_pvalues, path =
 
 
 
-# OFAV SS SP --------------------------------------------------------------
+# TL_Trans OFAV SS SP --------------------------------------------------------------
 
 #filter to just have OFAV data 
 raw_OFAV_SSvSP <- raw_calice %>%
@@ -242,6 +242,31 @@ ggsave("plot_OFAV_SSvSP_D_pvalues.jpg", plot = plot_D_OFAV_SSvSP_pvalues, path =
 
 
 
+
+
+
+# TLPR21 data import & manipulation ------------------------------------------------------------------
+
+
+
+
+
+
+
+# Import data 
+TLPR21_calice_merged<- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Data/TLPR21_Calice_Merged.csv') 
+
+# 
+TLPR21_OFAV <- TLPR21_calice_merged %>%
+  filter(Species == "OFAV")
+
+ggplot(TLPR21_OFAV, aes(x=Act_Depth,y=value)) +
+  geom_point() +
+  facet_wrap( ~ MEASUREMENT)+
+  geom_smooth(method=lm)
+
+model <- lm(value ~ Act_Depth, TLPR21_OFAV)
+summary (model)
 
 # Example Analysis  ----------------------------------------------------------------
 

@@ -20,7 +20,7 @@ OFRA_ML_files = list.files(path = '~/Desktop/GitHub/TLPR21/Morphology/TLPR21_Cal
 OFRA_T_files = list.files(path = '~/Desktop/GitHub/TLPR21/Morphology/TLPR21_Calice_photos/OFRA_T', pattern = "csv$", full.names = TRUE)
 
 # Append each of these lists together 
-list_of_files <- c(OFAV_T_files,OFAV_T_files,OFRA_ML_files,OFRA_T_files)
+list_of_files <- c(OFAV_T_files,OFAV_ML_files,OFRA_ML_files,OFRA_T_files)
 
 # I messed up and did not include the labels in the original data sets So here's my attempt to fix that
 # This will add a column to each data frame with the label column 
