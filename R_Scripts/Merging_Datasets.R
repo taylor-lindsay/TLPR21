@@ -4,6 +4,7 @@
 # Packages & Data Import  -------------------------------------------------
 # Import Libraries
 library(tidyverse)
+
 # Import Data 
 raw_calice <- read.csv('~/Desktop/GITHUB/CF_2022/Transplants_Calice_Master.csv')
 raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
@@ -153,4 +154,55 @@ write.csv(need_data, '~/Desktop/Need_Data.csv')
 
 
 
+
+
+
+
+# TLPR21 Morphology data managment ----------------------------------------
+TLPR21_raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Data/TLPR21_Calice_Data.csv') 
+TLPR21_meta <- read.csv('~/Desktop/GITHUB/TLPR21/TLPR21_Raw_Master.csv') 
+
+# fix raw calice data sets 
+# Rename Column so we can merge 
+TLPR21_raw_calice <- TLPR21_raw_calice %>%
+  rename("Sample_ID" = "Label")
+
+#Merge multiple calices per sample
+calice_W_means <- TLPR21_raw_calice  %>% 
+  filter(MEASUREMENT=="W") %>%
+  group_by(Sample_ID,MEASUREMENT) %>%
+  summarise(., value = mean(Length)) 
+
+calice_H_means <- TLPR21_raw_calice %>% 
+  filter(MEASUREMENT=="H") %>%
+  group_by(Sample_ID,MEASUREMENT) %>%
+  summarise(., value = mean(Length)) 
+
+calice_CW_means <- TLPR21_raw_calice %>% 
+  filter(MEASUREMENT=="CW") %>%
+  group_by(Sample_ID,MEASUREMENT) %>%
+  summarise(., value = mean(Length)) 
+
+calice_CH_means <- TLPR21_raw_calice %>% 
+  filter(MEASUREMENT=="CH") %>%
+  group_by(Sample_ID,MEASUREMENT) %>%
+  summarise(., value = mean(Length)) 
+
+calice_A_means <- TLPR21_raw_calice %>% 
+  filter(MEASUREMENT=="A") %>%
+  group_by(Sample_ID,MEASUREMENT) %>%
+  summarise(., value = mean(Area)) 
+
+calice_CA_means <- TLPR21_raw_calice %>% 
+  filter(MEASUREMENT=="CA") %>%
+  group_by(Sample_ID,MEASUREMENT) %>%
+  summarise(., value = mean(Area))
+
+TLPR21_Calice_means <- rbind(calice_CA_means,calice_A_means,calice_CH_means,calice_CW_means,calice_H_means,calice_W_means)
+
+# Merge the datasets 
+TLPR21_calice_merged <- merge(x= TLPR21_Calice_means, y=TLPR21_meta[3:8], by= "Sample_ID")
+
+# Save 
+write.csv(TLPR21_calice_merged, '~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Data/TLPR21_Calice_Merged.csv')
 
