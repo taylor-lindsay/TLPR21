@@ -1,3 +1,13 @@
+# Title: Calice Analysis
+# Author: Taylor Lindsay, Hana-lei Evans 
+# Date: Summer '22
+# Input files:
+    #  raw calice data 
+# Output files: 
+    # 
+# Notes 
+
+
 # Calice Morphology Data Analysis 
 # Written by Taylor Lindsay & Hana-lei Evans, Summer '22
 # Data analysis on coral calice morphometrics from common garden experiment in Puerto Rico. 
