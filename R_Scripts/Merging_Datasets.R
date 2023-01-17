@@ -12,7 +12,7 @@ raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
 # Cleaning morphology dataset ---------------------------------------------
 
 # Change "O" to "0" in sample labels CALICE FILE
-raw_calice$Label <- raw_calice$Label %>% 
+raw_calice$colony_id <- raw_calice$colony_id %>% 
   gsub("OFAV_SP_OAZ24", "OFAV_SP_0AZ24", .)  %>%
   gsub("OFAV_SP_OAZ4", "OFAV_SP_0AZ4", .)  %>%
   gsub("OFAV_SS_OAZ4", "OFAV_SS_0AZ4", .)  %>%
