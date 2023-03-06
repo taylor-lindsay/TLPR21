@@ -35,7 +35,7 @@ read_chl <- function(file) {
 }
 
 # List chlorophyll data files
-chl_path <- "~/Desktop/GITHUB/TLPR21/CHL/TLPR21/"                        # Path to chlorophyll data directory    #####
+chl_path <- "~/Desktop/GITHUB/TLPR21/CHL/TL_Trans/"                        # Path to chlorophyll data directory     #####
 all_chl_files <- list.files(path = chl_path, pattern = "*.csv")          # List all files in directory
 chl_platemaps <- list.files(path = chl_path, pattern = "platemap")       # List platemap files
 chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
@@ -50,12 +50,12 @@ df <- df %>%
   mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y)))
 
 # Load homogenate volume
-vol <- read_csv("~/Desktop/GITHUB/TLPR21/TLPR21_Raw_Master.csv") %>%                          #####
-  select(colony_id, airbrush_volume, depth,	act_depth,	species,	site) %>%
+vol <- read_csv("~/Desktop/GITHUB/TLPR21/TL_Trans_Raw_Master.csv") %>%                                              #####
+  select(colony_id, airbrush_volume) %>%
   filter(!is.na(airbrush_volume))
 
 # Load surface area
-sa <- read_csv("~/Desktop/GITHUB/TLPR21/Surface_Area/TLPR21_Surface_Area.csv") %>%            #####
+sa <- read_csv("~/Desktop/GITHUB/TLPR21/Surface_Area/TL_Trans_Surface_Area.csv") %>%                                #####
   select(colony_id, surface_area) %>%
   filter(!is.na(surface_area))
 
@@ -116,7 +116,7 @@ chl %>%
   #mutate(timepoint="FEB")%>%
   filter(!is.na(chla.ug.cm2))%>%
   filter(!is.na(chlc2.ug.cm2))%>%
-  write.csv(., '~/Desktop/GITHUB/TLPR21/CHL/Results/TLPR21_CHL_Results.csv')
+  write.csv(., '~/Desktop/GITHUB/TLPR21/CHL/TL_Trans_CHL_Results.csv')                                  #####
 
 
 # Plots -------------------------------------------------------------------
