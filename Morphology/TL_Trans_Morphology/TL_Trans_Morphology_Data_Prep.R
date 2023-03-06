@@ -104,7 +104,7 @@ density <- read.csv('~/Desktop/GitHub/TLPR21/Morphology/TL_Trans_Morphology/TL_T
 
 #merge density & calices
 joined2 <- full_join(calice_means_wide, density, by = "colony_id") %>%
-  .[,c(1:9,13)]
+  .[,c(1,4:9,13)]
 
 write.csv(joined2, '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology_Results.csv', row.names=FALSE)
 
