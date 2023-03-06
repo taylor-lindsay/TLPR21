@@ -26,8 +26,7 @@ library("RColorBrewer")
 # TL_Trans Import & first boxplots ------------------------------------------------------------------
 
 # Import data 
-raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv') 
-
+raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Merged.csv') 
 
 #width 
 plot_W <- ggplot(raw_calice, aes(x=Treatment, y=mean_W, color=Species)) +

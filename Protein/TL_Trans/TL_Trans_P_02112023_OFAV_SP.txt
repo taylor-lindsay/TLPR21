@@ -1,0 +1,42 @@
+
+
+Software Version	3.03.14
+
+
+
+Experiment File Path:	C:\Users\synergy\Desktop\T.Lindsay\TL_Trans_P_02112023_OFAV_SP.xpt
+Protocol File Path:	C:\Users\Public\Documents\Protocols\KW_Protein-562nm.prt
+
+
+
+Plate Number	Plate 1
+Date	2/11/2023
+Time	3:11:19 PM
+Reader Type:	Synergy HTX
+Reader Serial Number:	18041123
+Reading Type	Reader
+
+Procedure Details
+
+Plate Type	96 WELL PLATE
+Eject plate on completion	
+Read	Absorbance Endpoint
+	Full Plate
+	Wavelengths:  562
+	Read Speed: Normal,  Delay: 100 msec,  Measurements/Data Point: 8
+
+
+
+Actual Temperature:	20.9
+
+Results
+	1	2	3	4	5	6	7	8	9	10	11	12
+A	1.754	1.903	1.461	1.474	1.104	1.116	0.878	0.799	0.617	0.626	0.408	0.390	562
+B	0.253	0.248	0.118	0.116	0.087	0.087	0.191	0.186	0.348	0.353	0.303	0.319	562
+C	0.313	0.309	0.295	0.288	0.213	0.218	0.269	0.276	0.133	0.134	0.220	0.231	562
+D	0.396	0.394	0.214	0.210	0.271	0.281	0.201	0.201	0.427	0.407	0.399	0.422	562
+E	0.477	0.478	0.119	0.121	0.435	0.476	0.220	0.214	0.277	0.283	0.503	0.522	562
+F	0.215	0.211	0.356	0.360	0.310	0.319	0.039	0.045	0.475	0.538	0.046	0.048	562
+G	0.050	0.045	0.049	0.047	0.045	0.047	0.045	0.045	0.047	0.048	0.045	0.045	562
+H	0.045	0.047	0.046	0.057	0.046	0.045	0.045	0.045	0.046	0.046	0.046	0.047	562
+

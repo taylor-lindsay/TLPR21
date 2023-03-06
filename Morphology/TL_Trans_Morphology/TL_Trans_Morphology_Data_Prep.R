@@ -29,8 +29,7 @@ cheatsheet <- read.csv('~/Desktop/GitHub/TLPR21/Morphology/CALICE.CHEATSHEET.csv
 files = list.files(path = '~/Desktop/GitHub/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Calice_Photos', pattern = "csv$", full.names = TRUE)
 
 meta <- read.csv('~/Desktop/GITHUB/TLPR21/TL_Trans_Raw_Master.csv') %>%
-  select(colony_id,species,treatment)
-
+  select(colony_id,species,treatment,recovered)
 
 
 # Merge & clean up data sets ----------------------------------------------
@@ -76,8 +75,36 @@ full <- rbind(lengths, areas)
 
 # Merge with metadata -----------------------------------------------------
 
+# finding faulty data
+#meta_without_missing <- meta %>% filter(!.$recovered=="MISSING")
+#bad_label <- setdiff(full$colony_id,meta_without_missing$colony_id)
+#bad_ <- setdiff(meta_without_missing$colony_id,full$colony_id)
+#bad_label
+#bad_
+
+# merge data sets 
 complete <- merge(full, meta, by = "colony_id")
 
-#write the Data set 
+#write the Long Data set 
 write.csv(complete, '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Merged.csv', row.names=FALSE)
+
+
+# average for each calice -------------------------------------------------
+
+#find means
+calice_means <- complete %>%
+  group_by(colony_id, species, treatment, MEASUREMENT) %>%
+  summarize(., mean_value = mean(value))
+
+#pivot wide
+calice_means_wide <- pivot_wider(calice_means, names_from=MEASUREMENT, values_from = mean_value)
+
+#load density data
+density <- read.csv('~/Desktop/GitHub/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Calice_Density.csv')
+
+#merge density & calices
+joined2 <- full_join(calice_means_wide, density, by = "colony_id") %>%
+  .[,c(1:9,13)]
+
+write.csv(joined2, '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology_Results.csv', row.names=FALSE)
 
