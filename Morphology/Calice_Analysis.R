@@ -29,11 +29,11 @@ library("RColorBrewer")
 raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Merged.csv') 
 
 #width 
-plot_W <- ggplot(raw_calice, aes(x=Treatment, y=mean_W, color=Species)) +
+plot_W <- ggplot(raw_calice, aes(x=treatment, y=mean_W, color=species)) +
   geom_boxplot() +
   labs(y= "Mean Width", x = "Treatment")
 #Columnella width 
-plot_CW <- ggplot(raw_calice, aes(x=Treatment, y=mean_CW, color=Species)) +
+plot_CW <- ggplot(raw_calice, aes(x=treatment, y=mean_CW, color=species)) +
   geom_boxplot() +
   labs(y= "Mean Width", x = "Treatment")
 #combine widths 
@@ -194,8 +194,6 @@ plots_OFAV_PPvPS <- ggplot(raw_OFAV_PPvPS_long, aes(x=factor(measurement, level 
   scale_fill_manual(values = c("cyan4", "goldenrod"))
 
 
-
-
 # compare means
 plots_OFAV_PPvPS_pvalues <- plots_OFAV_PPvPS + stat_compare_means(method = "t.test", size = 2)
 ggsave("plot_OFAV_PPvPS_pvalues.jpg", plot = plots_OFAV_PPvPS_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
@@ -207,7 +205,6 @@ plot_D_OFAV_PPvPS <- ggplot(raw_OFAV_PPvPS, aes(x=Treatment, y=Calice_Density)) 
   labs(y= "Calice Density", x = "Treatment")
 plot_D_OFAV_PPvPS_pvalues <- plot_D_OFAV_PPvPS + stat_compare_means(method = "t.test", size = 2)
 ggsave("plot_OFAV_PPvPS_D_pvalues.jpg", plot = plot_D_OFAV_PPvPS_pvalues, path = '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Calice_Plots')
-
 
 
 # TL_Trans OFAV SS SP --------------------------------------------------------------

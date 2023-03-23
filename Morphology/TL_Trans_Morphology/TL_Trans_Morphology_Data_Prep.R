@@ -89,10 +89,36 @@ complete <- merge(full, meta, by = "colony_id")
 write.csv(complete, '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Merged.csv', row.names=FALSE)
 
 
+# remove outliers -------------------------------------------------
+
+#function to remove outliers 
+remove_outliers <- function(file,i) {
+  file %>% 
+    filter(MEASUREMENT == i) %>%
+    filter(!is.na(value)) %>%
+    mutate(zscore = (.$value - mean(.$value))/sd(.$value)) %>%
+    filter(abs(zscore)<3)
+}
+
+# D
+W2 <- remove_outliers(complete,"W")
+A2 <- remove_outliers(complete,"A")
+H2 <- remove_outliers(complete,"H")
+CW2 <- remove_outliers(complete,"CW")
+CA2 <- remove_outliers(complete,"CA")
+CH2 <- remove_outliers(complete,"CH")
+
+complete2 <- full_join(W2,A2)
+complete2 <- full_join(complete2,H2)
+complete2 <- full_join(complete2,CA2)
+complete2 <- full_join(complete2,CH2)
+complete2 <- full_join(complete2,CW2)
+
+
 # average for each calice -------------------------------------------------
 
 #find means
-calice_means <- complete %>%
+calice_means <- complete2 %>%
   group_by(colony_id, species, treatment, MEASUREMENT) %>%
   summarize(., mean_value = mean(value))
 
@@ -100,11 +126,17 @@ calice_means <- complete %>%
 calice_means_wide <- pivot_wider(calice_means, names_from=MEASUREMENT, values_from = mean_value)
 
 #load density data
-density <- read.csv('~/Desktop/GitHub/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Calice_Density.csv')
+density <- read.csv('~/Desktop/GitHub/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Calice_Density.csv') %>%
+    filter(!is.na(D)) %>%
+    mutate(zscore = (.$D - mean(.$D))/sd(.$D)) %>%
+    filter(abs(zscore)<3)
 
 #merge density & calices
 joined2 <- full_join(calice_means_wide, density, by = "colony_id") %>%
   .[,c(1,4:9,13)]
+
+joined2 <- joined2 %>%
+  mutate(CA.A = CA / A)
 
 write.csv(joined2, '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology_Results.csv', row.names=FALSE)
 
