@@ -68,6 +68,25 @@ sym <- sym %>%
   filter(abs(zscore)<3)%>%
   select(colony_id, sym.cm2)
 
+# sym AFDW
+sym_AFDW <- read.csv('~/Desktop/GITHUB/TLPR21/AFDW/TL_Trans_AFDW_Results.csv')  %>%
+  select(colony_id, Sym_AFDW_mg.cm2)
+sym_AFDW <- sym_AFDW %>%
+  filter(!is.na(Sym_AFDW_mg.cm2)) %>%
+  mutate(zscore = (.$Sym_AFDW_mg.cm2 - mean(.$Sym_AFDW_mg.cm2))/sd(.$Sym_AFDW_mg.cm2)) %>%
+  filter(abs(zscore)<3)%>%
+  select(colony_id, Sym_AFDW_mg.cm2)
+
+# sym AFDW
+host_AFDW <- read.csv('~/Desktop/GITHUB/TLPR21/AFDW/TL_Trans_AFDW_Results.csv')  %>%
+  select(colony_id, Host_AFDW_mg.cm2)
+host_AFDW <- host_AFDW %>%
+  filter(!is.na(Host_AFDW_mg.cm2)) %>%
+  mutate(zscore = (.$Host_AFDW_mg.cm2 - mean(.$Host_AFDW_mg.cm2))/sd(.$Host_AFDW_mg.cm2)) %>%
+  filter(abs(zscore)<3)%>%
+  select(colony_id, Host_AFDW_mg.cm2)
+
+
 # join & Write  -------------------------------------------------------------------
 
 # join all the data 
@@ -77,6 +96,8 @@ full <- full_join(full, chla)
 full <- full_join(full, chlc2)
 full <- full_join(full, sym)
 full <- full_join(full, prot)
+full <- full_join(full, host_AFDW)
+full <- full_join(full, sym_AFDW)
   
 
 full <- mutate(full, chla.sym = chla.ug.cm2/sym.cm2)
@@ -87,8 +108,7 @@ full <- full %>%
   mutate(., full_treatment = paste0(species,"_",treatment)) %>%  # combine species and treatment 
   filter(recovered != "MISSING") 
 
-full_final <- full[,c(1:3,20, 7:14, 5:6, 15:19)]
-
+full_final <- full[,c(1:3,22, 7:14, 5:6, 15:21)]
 
 # write
 
