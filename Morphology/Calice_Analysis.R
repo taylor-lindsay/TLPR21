@@ -253,12 +253,6 @@ ggsave("plot_OFAV_SSvSP_D_pvalues.jpg", plot = plot_D_OFAV_SSvSP_pvalues, path =
 
 # TLPR21 data import & manipulation ------------------------------------------------------------------
 
-
-
-
-
-
-
 # Import data 
 TLPR21_calice_merged<- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Data/TLPR21_Calice_Merged.csv') 
 
