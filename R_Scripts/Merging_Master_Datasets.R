@@ -86,7 +86,6 @@ host_AFDW <- host_AFDW %>%
   filter(abs(zscore)<3)%>%
   select(colony_id, Host_AFDW_mg.cm2)
 
-
 # join & Write  -------------------------------------------------------------------
 
 # join all the data 

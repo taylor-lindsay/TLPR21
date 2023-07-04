@@ -16,8 +16,9 @@ library(ggplot2)
 library(dplyr)
 
 #AFDW data
-AFDW <- read.csv('~/Desktop/GITHUB/TLPR21/AFDW/TL_TRANS_AFDW.csv') %>%
-  select(colony_id,sym_host,AFDW)
+AFDW <- read.csv('~/Desktop/GITHUB/TLPR21/AFDW/TL_TRANS_AFDW.csv')
+AFDW <- AFDW %>%
+  select(colony_id,sym_host,AFDW.g.ml.)
 
 # Load homogenate volume
 vol <- read_csv("~/Desktop/GITHUB/TLPR21/TL_Trans_Raw_Master.csv") %>%                                              #####
@@ -36,13 +37,13 @@ select(colony_id, surface_area) %>%
 
 Sym <- AFDW %>%
   filter(.,sym_host=="SYM") %>%
-  filter(.,AFDW>0)%>%
+  filter(.,AFDW.g.ml.>0)%>%
   setNames(c("colony_id","sym_host","AFDW_sym")) %>%
   .[,c(1,3)]
 
 Host <- AFDW %>%
   filter(.,sym_host=="HOST") %>%
-  filter(.,AFDW>0)%>%
+  filter(.,AFDW.g.ml.>0)%>%
   setNames(c("colony_id","sym_host","AFDW_host")) %>%
   .[,c(1,3)]
 
@@ -60,6 +61,9 @@ AFDW_fin <- AFDW_Merge %>%
 
 # just the columns I want 
 AFDW_small <- AFDW_fin[,c(1,6,7)]
+
+ggplot(AFDW_small, aes(x=colony_id,y=Sym_AFDW_mg.cm2)) +
+  geom_point()
 
 # write the file 
 write.csv(AFDW_small, '~/Desktop/GITHUB/TLPR21/AFDW/TL_Trans_AFDW_Results.csv')

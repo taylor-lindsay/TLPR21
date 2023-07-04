@@ -22,6 +22,11 @@ raw <- read.csv('~/Desktop/GITHUB/TLPR21/TL_Trans_Results.csv')
 raw <- raw %>%
   mutate(group = str_sub(full_treatment,1,6))
 
+raw2 <- raw %>%
+  filter(., full_treatment == c("OFAV_SS", "OFAV_SP"))
+
+ggplot(raw2, aes(x=colony_id,y=chla.ug.cm2 )) +
+  geom_point()
 
 # make a table of means & SD 
 means <- raw %>%
@@ -29,16 +34,27 @@ means <- raw %>%
   summarise(across(everything(), .f = list(mean = mean, sd = sd), na.rm = TRUE))
   
 # Define my groups for stat compare means 
-treatment_comparisons <- list( c("OFAV_PS","OFAV_PP"), c("OFAV_SP","OFAV_SS"), c("OFRA_PP","OFRA_PS"), c("OFRA_PP", "OFAV_PP"), c("OFAV_PP","OFAV_SS") )
+treatment_comparisons <- list( c("OFAV_PS","OFAV_PP"), c("OFAV_SP","OFAV_SS"), c("OFRA_PP","OFRA_PS"))
 
 
 # protein -------------------------------------------------------------------
+measurement_order <- c('OFAV_S','OFAV_P','OFRA_P') 
+x_order <- c('OFAV_SP','OFAV_SS','OFAV_PP', 'OFAV_PS', 'OFRA_PP', 'OFRA_PS') 
+pj <- position_jitterdodge(jitter.width=0.1, seed=9,
+                           jitter.height = 0)
 
-protein <- ggplot(raw, aes(x=full_treatment, y=prot_mg.cm2, color=group)) +
-  geom_boxplot() +
-  labs(y= "Protein (mg/cm2)", x = "Treatment")
-protein_pvalue <- protein + stat_compare_means(comparisons = treatment_comparisons, method = "t.test", size = 3)
-ggsave("treatments_protein_pvalue.jpg", plot = protein_pvalue , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 6,
+protein <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=prot_mg.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Protein (mg/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "t.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+protein
+ggsave("treatments_protein_pvalue.jpg", plot = protein , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 6,
        height = 6)
 
 # CHLA -------------------------------------------------------------------
@@ -77,7 +93,24 @@ sym_pvalue <- sym + stat_compare_means(comparisons = treatment_comparisons, meth
 ggsave("treatments_sym_pvalue.jpg", plot = sym_pvalue , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 6,
        height = 6) 
 
+# Host AFDW --------------------------------------------------------------------
 
+afdw <- ggplot(raw, aes(x=full_treatment, y=Host_AFDW_mg.cm2, color=group)) +
+  geom_boxplot() +
+  labs(y= " (mg/cm2)", x = "Treatment")
+afdw_pvalue <- afdw + stat_compare_means(comparisons = treatment_comparisons, method = "t.test", size = 3)
+ggsave("treatments_H_afdw_pvalue.jpg", plot = afdw_pvalue , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 6,
+       height = 6) 
+afdw_pvalue 
+
+# Sym AFDW ----------------------------------------------------------------
+S_afdw <- ggplot(raw, aes(x=full_treatment, y=Sym_AFDW_mg.cm2, color=group)) +
+  geom_boxplot() +
+  labs(y= " (mg/cm2)", x = "Treatment")
+S_afdw_pvalue <- S_afdw + stat_compare_means(comparisons = treatment_comparisons, method = "t.test", size = 3)
+ggsave("treatments_S_afdw_pvalue.jpg", plot = S_afdw_pvalue , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 6,
+       height = 6) 
+S_afdw_pvalue
 
 # Morphology -------------------------------------------------------------------
 
@@ -182,5 +215,54 @@ plot_morph_OFRA_PP_PS <- ggplot(morph_OFRA_PP_PS, aes(x=factor(measurement, leve
   labs(y= "Mean Length (cm or cm2)", x = "Measurement")
 morph_OFRA_PP_PS_pvalue <- plot_morph_OFRA_PP_PS  + stat_compare_means(method = "t.test", size = 2)
 ggsave("morph_OFRA_PP_PS_pvalue.jpg", plot = morph_OFRA_PP_PS_pvalue , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/',width = 7,
+       height = 9) 
+
+
+# OFRA PP vs PS just height and width 
+morph_OFRA_PP_PS <- morph_long %>%
+  filter(measurement != "D") %>%
+  filter(measurement != "CA.A") %>%
+  filter(measurement != "A") %>%
+  filter(measurement != "CA") %>%
+  filter(full_treatment == "OFRA_PP" | full_treatment == "OFRA_PS")
+
+plot_morph_OFRA_PP_PS <- ggplot(morph_OFRA_PP_PS, aes(x=factor(measurement, level=measurement_order), y=value, fill=full_treatment)) +
+  geom_boxplot(alpha=0.7) +
+  labs(y= "Mean Length (cm or cm2)", x = "Trait", fill = "") + 
+  stat_compare_means(method = "t.test", label = "p.signif", 
+                     symnum.args = list(c(0, 0.0001, 0.001, 0.01, 0.05, 1),
+                                        symbols = c("****", "***", "**", "*", ""))) +
+  scale_fill_manual(values = c("#464694", "#A4A4DB"), labels=c('Deep to Deep', 'Deep to Shallow'))+
+  geom_point(aes(color = full_treatment), position = pj, size=1, show.legend = FALSE)+
+  scale_color_manual(values = c("#464694", "#A4A4DB")) +
+  scale_x_discrete(labels=c('Calice Height', 'Columella Height', 'Calice Width', 'Columella Width')) + 
+  theme_classic() 
+
+
+plot_morph_OFRA_PP_PS 
+
+ggsave("morph_OFRA_PP_PS_HW_pvalue.jpg", plot = plot_morph_OFRA_PP_PS  , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/',width = 6,
        height = 6) 
+
+
+
+#measurement_order <- c('OFAV_S','OFAV_P','OFRA_P') 
+#x_order <- c('OFAV_SP','OFAV_SS','OFAV_PP', 'OFAV_PS', 'OFRA_PP', 'OFRA_PS') 
+pj <- position_jitterdodge(jitter.width=0.1, seed=9,
+                           jitter.height = 0,
+                           dodge.width = 0.3)
+
+protein <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=prot_mg.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Protein (mg/cm2)", x = "Cage Treatment", fill='Population') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "t.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+protein
+ggsave("treatments_protein_pvalue.jpg", plot = protein , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 6,
+       height = 6)
 
