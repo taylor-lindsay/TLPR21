@@ -1,0 +1,388 @@
+---
+title: "TL_Trans Detailed Analysis"
+author: "Taylor Lindsay"
+date: "2023-08-21"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+\newpage
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE)
+```
+# Summary & Terms 
+This document shows the results from a reciprocal transplant experiment in Puerto Rico 
+
+OFAV - *Orbicella faveolata*, OFRA - *Orbicella franksii* 
+
+PP - Deep to deep transplant, PS - Deep to shallow transplant, SS - Shallow to shallow transplant, SP - Shallow to deep transplant 
+
+# Load libraries: Done  
+```{r libraries & imports, include=FALSE}
+# Libraries 
+library(tidyverse)
+library(dplyr)
+library(ggpubr)
+library(ggplot2)
+
+# load data & clean it up 
+
+raw <- read.csv('~/Desktop/GITHUB/TLPR21/TL_Trans_Results.csv')
+
+# make a 'group column' that allows us to facet wrap 
+raw <- raw %>%
+  mutate(group = str_sub(full_treatment,1,6))
+
+# make a table of means & SD 
+means <- raw %>%
+  group_by(full_treatment) %>%
+  summarise(across(everything(), .f = list(mean = mean, sd = sd), na.rm = TRUE))
+  
+# Define my groups for stat compare means 
+treatment_comparisons <- list( c("OFAV_PS","OFAV_PP"), c("OFAV_SP","OFAV_SS"), c("OFRA_PP","OFRA_PS"), c("OFRA_PP","OFAV_PP"), c("OFAV_PP","OFAV_SS"))
+
+# set orders for graphs 
+measurement_order <- c('OFAV_S','OFAV_P','OFRA_P') 
+x_order <- c('OFAV_SP','OFAV_SS','OFAV_PP', 'OFAV_PS', 'OFRA_PP', 'OFRA_PS') 
+
+# define offset of points 
+pj <- position_jitterdodge(jitter.width=0.1, seed=9,
+                           jitter.height = 0)
+```
+# Remove outliers: Done
+Each variable in this data set has been filtered for outliers > 3x z-score 
+
+# Check for Normalcy: Done
+Run Shapiro and Bartlett tests on all parameters to test for normality and homogeneity 
+
+**Results of Normalcy check**
+All physiology metrics do not have parametric shapes or homogeneity, must use non-parametric tests on all analyses 
+
+t-test -> Wilcoxon's 
+
+
+\newpage
+**Chlorophyll a**
+```{r chla_normalcy, fig.height = 2, fig.width = 2, fig.align = "center", fig.show="hold"}
+ggdensity(raw$chla.ug.cm2, xlab = "chla.ug.cm2")
+ggqqplot(raw$chla.ug.cm2)
+shapiro.test(raw$chla.ug.cm2)
+bartlett.test(chla.ug.cm2~full_treatment, data=raw) 
+```
+**Chlorophyll c2**
+```{r chlc2_normalcy, fig.height = 2, fig.width = 2, fig.align = "center", fig.show="hold"}
+ggdensity(raw$chlc2.ug.cm2, xlab = "chlc2.ug.cm2")
+ggqqplot(raw$chlc2.ug.cm2)
+shapiro.test(raw$chlc2.ug.cm2)
+bartlett.test(chlc2.ug.cm2~full_treatment, data=raw) 
+```
+\newpage
+**Symbiont Density**
+```{r sym_normalcy, fig.height = 2, fig.width = 2, fig.align = "center", fig.show="hold"}
+ggdensity(raw$sym.cm2, xlab = "sym.cm2")
+ggqqplot(raw$sym.cm2)
+shapiro.test(raw$sym.cm2)
+bartlett.test(sym.cm2~full_treatment, data=raw) 
+```
+**Protein Concentration** 
+```{r prot_normalcy, fig.height = 2, fig.width = 2, fig.align = "center", fig.show="hold"}
+ggdensity(raw$prot_mg.cm2, xlab = "prot_mg.cm2")
+ggqqplot(raw$prot_mg.cm2)
+shapiro.test(raw$prot_mg.cm2)
+bartlett.test(prot_mg.cm2~full_treatment, data=raw) 
+```
+\newpage
+**Symbiont Ash Free Dry Weight**
+```{r afdw_sym_normalcy, fig.height = 2, fig.width = 2, fig.align = "center", fig.show="hold"}
+ggdensity(raw$Sym_AFDW_mg.cm2, xlab = "Sym_AFDW_mg.cm2")
+ggqqplot(raw$Sym_AFDW_mg.cm2)
+shapiro.test(raw$Sym_AFDW_mg.cm2)
+bartlett.test(Sym_AFDW_mg.cm2~full_treatment, data=raw) 
+```
+**Host Ash Free Dry Weight** 
+```{r afdw_host_normalcy, fig.height = 2, fig.width = 2, fig.align = "center", fig.show="hold"}
+ggdensity(raw$Host_AFDW_mg.cm2, xlab = "Host_AFDW_mg.cm2")
+ggqqplot(raw$Host_AFDW_mg.cm2)
+shapiro.test(raw$Host_AFDW_mg.cm2)
+bartlett.test(Host_AFDW_mg.cm2~full_treatment, data=raw) 
+```
+
+
+\newpage
+# Chlorophyl a
+```{r chla, fig.height = 3, fig.width = 6, fig.align = "center"}
+chla <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=chla.ug.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Chlorophyl a (ug/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+chla
+pairwise.wilcox.test(raw$chla.ug.cm2, raw$full_treatment, p.adjust.method="none")
+```
+
+### Results summary 
+
+**Expected trend: low in shallow** 
+
+There were no differences in chl a between species controls or deep and shallow controls of OFAV. *this is surprising* 
+
+For both OFAV and OFRA, there was a significant decrease in chl a concentration when samples were transplanted from deep to shallow. There was no effect of transplanting OFAV from shallow to deep. *this follows our expected trend, with the exception that OFAV transplanted to deep expressed no change* 
+
+\newpage
+# Chlorophyll c2
+
+```{r chlc, fig.height = 3, fig.width = 6, fig.align = "center"}
+chlc <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=chlc2.ug.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Chlorophyl c2 (ug/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+chlc
+pairwise.wilcox.test(raw$chlc2.ug.cm2, raw$full_treatment, p.adjust.method="none")
+```
+
+### Results summary 
+
+**Expected results: low in shallow** 
+
+There were no differences in chl c2 between species controls or deep and shallow controls of OFAV. *surprising, we would expect depth related changes* 
+
+OFRA experienced a significant decrease in chl c2 when transplanted from deep to shallow.  *this follows the expected trend*
+
+OFAV experienced a significant decrease in chl c2 when transplanted from shallow to deep. *this is the opposite of the expected trend* 
+
+*it doesn't seem like c2 follows the same trends that chl a follows* 
+
+\newpage
+# Symbiont density 
+```{r sym,  fig.height = 3, fig.width = 6, fig.align = "center"}
+sym <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=sym.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Symbiont Density (count/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+sym
+pairwise.wilcox.test(raw$sym.cm2, raw$full_treatment, p.adjust.method="none")
+```
+
+### Results summary 
+
+**Expected results: studies have found mixed results, but most suggest that there are fewer symbionts in shallow environments**
+
+There were no differences in symbiont density between species controls or deep and shallow controls of OFAV. 
+
+For both OFAV and OFRA that were transplanted from deep to shallow, there was no effect on the symbiont density. 
+
+For OFAV transplanted from shallow to deep, there was a significant decrease in symbiont density. *this goes against expected results* 
+
+\newpage
+# Protein
+```{r protein,  fig.height = 3, fig.width = 6, fig.align = "center"}
+protein <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=prot_mg.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Protein (mg/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+protein
+pairwise.wilcox.test(raw$prot_mg.cm2, raw$full_treatment, p.adjust.method="none")
+```
+
+### Results summary 
+
+**Expected results: higher protein concentrations in shallow environments**
+
+There was no difference in protein concentration between deep and shallow controls of OFAV. *this is suprising because our results showed a strong effect of depth on protein concentration. It is possible that this change in protein occurs quickly during the period of acclimation, then levels out over time* 
+
+In deep samples only, OFAV controls had a significantly higher concentration of protein than OFRA controls. *this makes sense because OFAV is a generalist that can survive in shallow environments, where we would expect the protein to be higher, while OFRA is a depth-specialist and therefore would usually have lower protein at depth*
+
+All three treatment pairs experienced a significant change in protein concentration between shallow and deep. No matter which direction the transplant occurred, shallow samples always had higher protein concentrations than deep for both OFAV and OFRA. *this follows our expectations that shallow samples have higher levels of protein* 
+
+\newpage
+# Symbiont Biomass 
+```{r AFDW sym, fig.height = 3, fig.width = 6, fig.align = "center"}
+AFDW_sym <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=Sym_AFDW_mg.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Symbiont AFDW (mg/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+AFDW_sym
+pairwise.wilcox.test(raw$Sym_AFDW_mg.cm2, raw$full_treatment, p.adjust.method="none")
+```
+
+### Results summary 
+
+**Expected results: dependent on symbiont density, which we expect to be higher at depth** 
+
+OFAV control samples had significantly higher biomass in shallow sites than deep. *goes against expectations*
+
+OFRA and OFAV deep controls did not differ.
+
+For both OFAV and OFRA, there was a significant increase in symbiont biomass when transplanted to shallow environments. *goes against expectations*
+
+OFRA did not experience significant change in biomass when transplanted to shallow. 
+
+
+# Host Biomass 
+```{r AFDW host, fig.height = 3, fig.width = 6, fig.align = "center"}
+AFDW_host <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=Host_AFDW_mg.cm2, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Host AFDW (mg/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+AFDW_host
+pairwise.wilcox.test(raw$Host_AFDW_mg.cm2, raw$full_treatment, p.adjust.method="none")
+```
+### Results summary 
+
+**Expected trend: biomass is higher in shallow corals** 
+
+OFAV has higher biomass in their shallow control than their deep control. *this follows our expected trend* 
+
+OFRA has significantly lower biomass than OFAV. *this follows the expected trend with OFRA being a deepth specialist, and OFAV being more generalist*
+
+OFRA transplanted from deep to shallow experienced an increase in biomass, while the same treatment on OFAV had no change. *this follows our expected trend, with OFAV sample size too low but still showing the trend* 
+
+OFAV transplanted from shallow to deep experienced a decrease in biomass. *this follows our expected trend* 
+
+\newpage
+# Calice Density  
+
+```{r density, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+# graph calice density 
+density <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=D, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Calice Density (count/cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+density
+pairwise.wilcox.test(raw$D, raw$full_treatment, p.adjust.method="none")
+
+```
+
+### Results summary 
+
+**Expected trend: Calices are smaller in shallow environments, so higher density** 
+
+OFAV controls were significanly higher density in shallow environments *This follows our expected results.*
+
+OFAV deep control was significantly higher density than OFRA deep control *This follows our expected results.*
+
+For both OFAV and OFRA when transplanted from deep to shallow, there was an increase in calice density, while there was no change when transplanted from shallow to deep. *This follows our expected results.* 
+
+\newpage
+# Calice Area 
+```{r Area, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+# graph calice density 
+area <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=A, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Coralite Area (cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+Carea <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=CA, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Calice Area (cm2)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+area
+Carea
+pairwise.wilcox.test(raw$A, raw$full_treatment, p.adjust.method="none")
+pairwise.wilcox.test(raw$CA, raw$full_treatment, p.adjust.method="none")
+```
+
+
+### Results summary 
+
+**Expected trend: Calices are smaller in shallow environments, but morphology will change very slowly and therefore we won't be surprised by small change** 
+
+For both calice area and corallite area, OFAV controls were significanly smaller in shallow environments *This follows our expected results.*
+
+For both calice area and corallite area, OFAV deep control were significantly smaller than OFRA deep control *This follows our expected results.*
+
+For each of the OFAV treatments, there was no change in corallite or calice area. *This is expected because these species are so slow growing* 
+
+For OFRA, there was no significant change in corallite area when transplanted from deep to shallow, but there was a significant decrease in the calice size. *This is surprising given how slow growing the species are, but follows expected patterns of smaller calices in shallow. We hypothesize that the corals acclimated to a foreign environment very quickly by reducing photoinhibition through reflectance of the calice.* 
+
+\newpage
+# Calice diameter 
+```{r diameter, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+# graph calice density 
+diameter <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=di, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Coralite diameter (cm)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+Cdiameter <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=Cdi, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Calice diameter (cm)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+diameter
+Cdiameter
+pairwise.wilcox.test(raw$di, raw$full_treatment, p.adjust.method="none")
+pairwise.wilcox.test(raw$Cdi, raw$full_treatment, p.adjust.method="none")
+```
+
+### Results summary 
+
+These results are EXACTLY the same as the area results, see that info. 
+
+

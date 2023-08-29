@@ -6,8 +6,9 @@
 library(tidyverse)
 
 # Import Data 
-raw_calice <- read.csv('~/Desktop/GITHUB/CF_2022/Transplants_Calice_Master.csv')
-raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
+raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Raw.csv')
+raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/TL_Trans_Raw_Master.csv')
+calice_density <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Calice_Density.csv')
 
 # Cleaning morphology dataset ---------------------------------------------
 
@@ -69,72 +70,84 @@ write.csv(raw_master, '~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
 # Create summary dataset  -------------------------------------------------
 
 #Seperating ID's
-raw_calice2 <-separate(raw_calice, Label, into= c("Species", "Treatment", "Sample", "Replicate"), sep = "_", remove = FALSE,)
+raw_calice2 <-separate(raw_calice, colony_id, into= c("species", "treatment", "sample", "replicate"), sep = "_", remove = FALSE,)
 
 #combining treatment and species values
 raw_calice2 <- raw_calice2 %>%
-  unite('Full_Treatment', Species:Treatment, remove= FALSE)
+  unite('full_treatment', species:treatment, remove= FALSE)
 
 #Merge multiple calices per sample
 calice_W_means <- raw_calice2 %>% 
   filter(MEASUREMENT=="W") %>%
-  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
-  summarise(., mean_W = mean(Length)) 
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., W = mean(Length)) 
 
 calice_H_means <- raw_calice2 %>% 
   filter(MEASUREMENT=="H") %>%
-  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
-  summarise(., mean_H = mean(Length)) 
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., H = mean(Length)) 
 
 calice_CW_means <- raw_calice2 %>% 
   filter(MEASUREMENT=="CW") %>%
-  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
-  summarise(., mean_CW = mean(Length)) 
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., CW = mean(Length)) 
 
 calice_CH_means <- raw_calice2 %>% 
   filter(MEASUREMENT=="CH") %>%
-  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
-  summarise(., mean_CH = mean(Length)) 
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., CH = mean(Length)) 
 
 calice_A_means <- raw_calice2 %>% 
   filter(MEASUREMENT=="A") %>%
-  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
-  summarise(., mean_A = mean(Area)) 
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., A = mean(Area)) 
 
 calice_CA_means <- raw_calice2 %>% 
   filter(MEASUREMENT=="CA") %>%
-  group_by(Label,Full_Treatment,Species,Treatment, Sample, Replicate) %>%
-  summarise(., mean_CA = mean(Area))
-
-calice_HW_merged <- merge(x= calice_W_means, y=calice_H_means, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
-calice_C_merged <- merge(x= calice_CW_means, y=calice_CH_means, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
-calice_A_merged <- merge(x= calice_A_means, y=calice_CA_means, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
-
-calice_new_merged <- merge(x= calice_HW_merged, y=calice_C_merged, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
-calice_merged_averages <-merge(x= calice_new_merged, y=calice_A_merged, by= c('Label','Full_Treatment','Species','Treatment','Sample','Replicate'), all=T)
-
-write.csv(calice_merged_averages, '~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv')
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., CA = mean(Area))
 
 
-# Merge morphology dataset with master ------------------------------------
 
-# Merge the two datasets by the label 
-merged <- merge(x= raw_master, y=merged2, by= c('Label','Species','Treatment','Sample'), all=T)
-merged_clean <- select(merged, -c('X'))
+calice_HW_merged <- merge(x= calice_W_means, y=calice_H_means, by= c('colony_id','full_treatment','species','treatment','sample','replicate'), all=T)
+calice_C_merged <- merge(x= calice_CW_means, y=calice_CH_means, by= c('colony_id','full_treatment','species','treatment','sample','replicate'), all=T)
+calice_A_merged <- merge(x= calice_A_means, y=calice_CA_means, by= c('colony_id','full_treatment','species','treatment','sample','replicate'), all=T)
 
-write.csv(merged, '~/Desktop/GITHUB/TLPR21/Transplants_Calices_Merged.csv')
+calice_new_merged <- merge(x= calice_HW_merged, y=calice_C_merged, by= c('colony_id','full_treatment','species','treatment','sample','replicate'), all=T)
+calice_merged_averages <-merge(x= calice_new_merged, y=calice_A_merged, by= c('colony_id','full_treatment','species','treatment','sample','replicate'), all=T)
 
-#merge in the transplants calice density data 
+# I want to average the h and w together to get one diameter unit 
+calice_diameter_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="W"|MEASUREMENT=="H") %>%
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., di = mean(Length)) 
 
-# Adding Calice density into the calice averages data sheet ---------------
+calice_Cdiameter_means <- raw_calice2 %>% 
+  filter(MEASUREMENT=="CW"|MEASUREMENT=="CH") %>%
+  group_by(colony_id,full_treatment,species,treatment, sample, replicate) %>%
+  summarise(., Cdi = mean(Length)) 
 
+calice_diameters_merged <- merge(x=calice_diameter_means, y=calice_Cdiameter_means, by= c('colony_id','full_treatment','species','treatment','sample','replicate'), all=T)
+calice_merged_averages <-merge(x= calice_merged_averages, y=calice_diameters_merged, by= c('colony_id','full_treatment','species','treatment','sample','replicate'), all=T)
 
-calice_density <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/Transplants_Calice_Density.csv')
-calice_master <- read.csv('~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv')
+# Make a graph to double check that these values worked out 
+calice_merged_averages %>%
+  filter(.,full_treatment=="OFAV_PP") %>%
+  ggplot()+ 
+  geom_point(aes(x=colony_id, y=W)) + 
+  geom_point(aes(x=colony_id, y=H), color="red") + 
+  geom_point(aes(x=colony_id,y=di), color="blue")
+  
+# make a column that has the ratio of the columella area and calice area 
+calice_merged_averages <- calice_merged_averages %>%
+  mutate(A.CA = A / CA)
 
-merged2 <- merge(x=calice_master, y=calice_density[,c("Label","Calice_Density")], by= "Label")
+# Adding Calice density into the calice averages data sheet
+merged2 <- merge(x=calice_merged_averages, y=calice_density[,c("colony_id","D")], by= "colony_id")
 
-write.csv(merged2, '~/Desktop/GITHUB/TLPR21/Transplants_Calice_Averages.csv')
+# Write the csv data 
+write.csv(merged2, '~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Results.csv')
+
 
 # Figure out which ones are missing  --------------------------------------
 
@@ -158,7 +171,7 @@ write.csv(need_data, '~/Desktop/Need_Data.csv')
 
 
 
-# TLPR21 Morphology data managment ----------------------------------------
+# XXXX DONT USE: TLPR21 Morphology data managment  ----------------------------------------
 TLPR21_raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Data/TLPR21_Calice_Data.csv') 
 TLPR21_meta <- read.csv('~/Desktop/GITHUB/TLPR21/TLPR21_Raw_Master.csv') 
 

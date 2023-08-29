@@ -28,9 +28,6 @@ sa <- sa %>%
   filter(abs(zscore)<3)%>%
   select(colony_id, surface_area)
 
-# Morphology 
-morph <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology_Results.csv') 
-
 # CHLA
 chla <- read.csv('~/Desktop/GITHUB/TLPR21/CHL/TL_Trans_CHL_Results.csv') %>%
   select(colony_id, chla.ug.cm2)
@@ -86,11 +83,56 @@ host_AFDW <- host_AFDW %>%
   filter(abs(zscore)<3)%>%
   select(colony_id, Host_AFDW_mg.cm2)
 
+# Morphology 
+A <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Results.csv') %>%
+  select(colony_id, A)
+A <- A %>%
+  filter(!is.na(A)) %>%
+  mutate(zscore = (.$A - mean(.$A))/sd(.$A)) %>%
+  filter(abs(zscore)<3)%>%
+  select(colony_id, A)
+
+CA <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Results.csv') %>%
+  select(colony_id, CA)
+CA <- CA %>%
+  filter(!is.na(CA)) %>%
+  mutate(zscore = (.$CA - mean(.$CA))/sd(.$CA)) %>%
+  filter(abs(zscore)<3)%>%
+  select(colony_id, CA)
+
+D <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Results.csv') %>%
+  select(colony_id, D)
+D <- D %>%
+  filter(!is.na(D)) %>%
+  mutate(zscore = (.$D - mean(.$D))/sd(.$D)) %>%
+  filter(abs(zscore)<3)%>%
+  select(colony_id, D)
+
+di <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Results.csv') %>%
+  select(colony_id, di)
+di <- di %>%
+  filter(!is.na(di)) %>%
+  mutate(zscore = (.$di - mean(.$di))/sd(.$di)) %>%
+  filter(abs(zscore)<3)%>%
+  select(colony_id, di)
+
+Cdi <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Results.csv') %>%
+  select(colony_id, Cdi)
+Cdi <- Cdi %>%
+  filter(!is.na(Cdi)) %>%
+  mutate(zscore = (.$Cdi - mean(.$Cdi))/sd(.$Cdi)) %>%
+  filter(abs(zscore)<3)%>%
+  select(colony_id, Cdi)
+
 # join & Write  -------------------------------------------------------------------
 
 # join all the data 
 full <- full_join(raw, sa)
-full <- full_join(full, morph)
+full <- full_join(full, A)
+full <- full_join(full, CA)
+full <- full_join(full, D)
+full <- full_join(full, di)
+full <- full_join(full, Cdi)
 full <- full_join(full, chla)
 full <- full_join(full, chlc2)
 full <- full_join(full, sym)
@@ -98,7 +140,7 @@ full <- full_join(full, prot)
 full <- full_join(full, host_AFDW)
 full <- full_join(full, sym_AFDW)
   
-
+# make a column where chlorophyl is standardized by symbionts 
 full <- mutate(full, chla.sym = chla.ug.cm2/sym.cm2)
 
 # combine species & treatment 
@@ -107,9 +149,7 @@ full <- full %>%
   mutate(., full_treatment = paste0(species,"_",treatment)) %>%  # combine species and treatment 
   filter(recovered != "MISSING") 
 
-full_final <- full[,c(1:3,22, 7:14, 5:6, 15:21)]
-
 # write
 
-write.csv(full_final, '~/Desktop/GITHUB/TLPR21/TL_Trans_Results.csv')
+write.csv(full, '~/Desktop/GITHUB/TLPR21/TL_Trans_Results.csv')
 
