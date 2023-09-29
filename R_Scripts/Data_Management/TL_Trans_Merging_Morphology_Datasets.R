@@ -6,9 +6,9 @@
 library(tidyverse)
 
 # Import Data 
-raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Morphology_Raw.csv')
-raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/TL_Trans_Raw_Master.csv')
-calice_density <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TL_Trans_Morphology/TL_Trans_Calice_Density.csv')
+raw_calice <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Morphology/TLPR21_Morphology_Raw.csv')
+raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/TLPR21_Raw_Master.csv')
+calice_density <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Morphology/TLPR21_Calice_Density_all.csv')
 
 # Cleaning morphology dataset ---------------------------------------------
 

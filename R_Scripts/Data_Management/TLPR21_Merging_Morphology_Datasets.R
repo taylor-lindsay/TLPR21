@@ -11,12 +11,12 @@ raw_master <- read.csv('~/Desktop/GITHUB/TLPR21/TLPR21_Raw_Master.csv')
 calice_density <- read.csv('~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Morphology/TLPR21_Calice_density_all.csv')
   
 #remove excess columns from raw_master if needed 
-raw_master <- select(raw_master, -c('X'))
-raw_calice <- select(raw_calice, -c('X'))
+#raw_master <- select(raw_master, -c('X'))
+#raw_calice <- select(raw_calice, -c('X'))
 
 # rewrite the files 
-write.csv(raw_calice, '~/Desktop/GITHUB/TLPR21/Transplants_Calice_Master.csv')
-write.csv(raw_master, '~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
+#write.csv(raw_calice, '~/Desktop/GITHUB/TLPR21/Transplants_Calice_Master.csv')
+#write.csv(raw_master, '~/Desktop/GITHUB/TLPR21/Transplants_Raw_Master.csv')
 
 
 # Create summary dataset  -------------------------------------------------
@@ -85,7 +85,7 @@ calice_merged_averages <- calice_merged_averages %>%
   mutate(A.CA = A / CA)
 
 # Adding Calice density into the calice averages data sheet
-merged2 <- merge(x=calice_merged_averages, y=calice_density[,c("colony_id","D")], by= "colony_id")
+merged2 <- merge(x=calice_merged_averages, y=calice_density[,c("colony_id","D")], by= "colony_id", all=T)
 
 # Write the csv data 
 write.csv(merged2, '~/Desktop/GITHUB/TLPR21/Morphology/TLPR21_Morphology/TLPR21_Morphology_Results.csv')

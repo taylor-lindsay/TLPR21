@@ -25,6 +25,10 @@ library(tidyverse)
 library(dplyr)
 library(ggpubr)
 library(ggplot2)
+library(tidyr)
+library("lubridate")
+library(stringr)
+library(hms)
 
 # load data & clean it up 
 
@@ -384,5 +388,232 @@ pairwise.wilcox.test(raw$Cdi, raw$full_treatment, p.adjust.method="none")
 ### Results summary 
 
 These results are EXACTLY the same as the area results, see that info. 
+
+
+
+
+
+
+
+
+\newpage
+# PAM
+```{r PAM, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+# read PAM data file
+PAM <- read.csv('~/Desktop/GITHUB/TLPR21/PAM/TL_TRANS_PAM_Aug04_13.csv')
+
+# make a nice graph for Qm
+ggplot(PAM, aes(x=factor(Treatment, level=x_order), y=Qm, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) +  
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) +
+  labs(y= "Qm", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+
+# make a nice graph for Fv/Fm
+ggplot(PAM, aes(x=factor(Treatment, level=x_order), y=Fv.Fm, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) +  
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) +
+  labs(y= "Fv/Fm", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+
+
+```
+
+
+### Results summary 
+
+Explanation of data: PAM measurements were taken and dawn and noon on Aug 4 and 13 2021. All fragments within 6 cages representing the 6 treatments were measured, but we do not have the ability to match the genotypes with this data. Thus, each of the 6 treatments are pooled. 
+
+**Expected Trends** 
+
+Photosynthetic efficiency - Fv/Fm: 
+
+* expected to be lower in high light and higher in low light 
+* associated with CHL and Sym density. having more sym or chl is less efficient. 
+* deep corals therefore expected to be more efficient than shallow 
+
+Maximum excitation pressure - Qm: 
+
+* expected to be inverse of Fv/Fm - higher in high-light and lower in low light
+* calculated based on the difference between efficiency at dawn and noon to see the difference in extreme light conditions 
+
+For all treatment and control pairs, the maximum excitation pressure was significantly higher and the photosynthetic efficiency was significantly lower in shallow environments than in deep. This supports the hypothesis that deeper corals are more efficient at capturing light than shallow corals. We showed that all three sets of samples are able to acclimate to new environments by changing their photosynthetic efficiency. ***these results follow all expectations***
+
+There is a significant difference in Maximum excitation pressure but not in photosynthetic efficiency between OFAV and OFRA. ***Not sure what this means*** 
+
+
+
+\newpage
+# PE Curves
+```{r PE_curve, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+```
+
+
+\newpage
+# Survival
+```{r Survival, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+
+```
+
+\newpage
+# NAME
+```{r NAME, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+```
+
+\newpage
+# Survival
+```{r S, fig.height = 3, fig.width = 6, fig.align = "center"}
+
+
+```
+
+\newpage
+# Environmental Data 
+
+I did not check for normalcy (sample sizes are huge, so do I have to? Shapiro test can't run on more than 5000 samples), and did not remove outliers 
+
+```{r enviro, fig.height = 3, fig.width = 6, fig.align = "center", include = FALSE }
+
+# Edit & Prep files ----------------------------------------------------------------
+# Temp & DO
+temp_DO <- read.csv('~/Desktop/GITHUB/TLPR21/Meta_Environmental_Data/TLPR21_Temp_DO_Raw.csv') 
+temp_DO <- temp_DO %>% mutate(datetime = mdy_hms(Datetime)) %>% select(!Datetime)  # Fix datetimes
+temp_DO$Date <- as_date(temp_DO$datetime)
+
+
+# Light 
+light_shallow <- read.csv('~/Desktop/GITHUB/TLPR21/Meta_Environmental_Data/LIGHT_SHALLOW_ALL.csv') %>% select(!c(SENSOR,old_date))
+light_deep <- read.csv('~/Desktop/GITHUB/TLPR21/Meta_Environmental_Data/LIGHT_DEEP_ALL.csv') %>% select(!c(SENSOR, old_date))
+
+light <- rbind(light_shallow, light_deep)
+light$Date <- as_date(light$Date)
+light$datetime <- as.POSIXct(paste(light$Date, light$Time), format = "%Y-%m-%d %H:%M:%S")
+
+#ggplot(light, aes(x=datetime, y=LightRaw)) + geom_point()
+
+#write_csv(light, '~/Desktop/GitHub/TLPR21/Meta_Environmental_Data/TL_TRANS_Light_Final.csv')
+
+# Combine Files 
+merged <- merge(light, temp_DO, all=TRUE) %>%
+  select(datetime, Date, Time, depth, LightCrrx, DO_mg.L, Temp_C)
+
+write_csv(merged, '~/Desktop/GitHub/TLPR21/Meta_Environmental_Data/TL_TRANS_Enviro_all.csv')
+
+
+# Create daytime light column  --------------------------------------------
+# include only times 1hr before and after sunrise (6am) and set (7pm)
+
+# filter by time of day 
+merged$Time <- as_hms(merged$Time)
+merged$daylight <- ifelse(merged$Time >= hms::as_hms('5:00:00') & merged$Time <= hms::as_hms('19:00:00'), paste(merged$LightCrrx), NA) %>%
+  as.numeric(merged$daylight)  
+
+#plot by date 
+#ggplot(merged, aes(x=datetime, y=daylight)) + geom_point()
+
+# plot by time of day 
+#ggplot(merged, aes(x=Time, y=daylight)) + geom_point()
+
+# Daily Means Graphs ----------------------------------------------------------
+
+#merged <- read.csv('~/Desktop/GITHUB/TLPR21/Meta_Environmental_Data/TL_TRANS_Enviro_all.csv') 
+#merged$datetime <- as.POSIXct(merged$datetime, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC")
+                             
+# daily means 
+daily_light <- merged %>%
+  group_by(Date,depth) %>%
+  summarize(mean_light = mean(LightCrrx, na.rm = TRUE))
+
+daily_DO <- merged %>%
+  group_by(Date,depth) %>%
+  summarize(mean_DO = mean(DO_mg.L, na.rm = TRUE))
+
+daily_temp <- merged %>%
+  group_by(Date,depth) %>%
+  summarize(mean_temp = mean(Temp_C, na.rm = TRUE))
+
+daily_daylight <- merged %>%
+  group_by(Date,depth) %>%
+  summarize(mean_daylight = mean(daylight, na.rm = TRUE))
+
+```
+
+
+```{r enviro_normalcy, fig.height = 2, fig.width = 2, fig.align = "center", fig.show="hold"}
+# DO
+ggdensity(merged$DO_mg.L, xlab = "chla.ug.cm2")
+ggqqplot(merged$DO_mg.L)
+shapiro.test(merged$DO_mg.L)
+bartlett.test(DO_mg.L~depth, data=merged) 
+
+#Light
+
+#daylight
+
+#temp 
+
+```
+
+
+
+
+```{r enviro graphs, fig.height = 2, fig.width = 6, fig.align = "center" }
+
+# graph daily values 
+ggplot(daily_light, aes(x=Date, y=mean_light, color=depth)) + 
+  geom_point()
+
+ggplot(daily_temp, aes(x=Date, y=mean_temp, color=depth)) + 
+  geom_point()
+
+ggplot(daily_DO, aes(x=Date, y=mean_DO, color=depth)) + 
+  geom_point()
+
+ggplot(daily_daylight, aes(x=Date, y=mean_daylight, color=depth)) + 
+  geom_point()
+
+```
+
+Why is oxygen higher in deep environments? 
+
+```{r enviro graphs2, fig.height = 6, fig.width = 5, fig.align = "center" }
+
+# Boxplot 
+merged_longer <- merged %>%
+  pivot_longer(!c(datetime, Date, Time, depth), names_to = "measurement", values_to = "value")
+
+ggplot(merged_longer, aes(x=depth, y=value)) + 
+  geom_boxplot() + 
+  stat_compare_means(method = "t.test") +
+  facet_wrap(~measurement,scales = "free")
+
+# summary tables ----------------------------------------------------------
+
+means <- merged %>%
+  group_by(depth) %>%
+  summarize_all(funs(mean(!is.na(.)))) 
+
+means
+
+```
+
+
+
+
+
 
 

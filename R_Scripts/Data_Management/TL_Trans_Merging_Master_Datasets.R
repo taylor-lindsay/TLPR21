@@ -21,12 +21,6 @@ raw <- read.csv('~/Desktop/GITHUB/TLPR21/TL_Trans_Raw_Master.csv') %>%
 # Surface Area 
 sa <- read.csv('~/Desktop/GITHUB/TLPR21/Surface_Area/TL_Trans_Surface_Area.csv') %>%
   select(colony_id, surface_area)
-# remove outliers
-sa <- sa %>%
-  filter(!is.na(surface_area)) %>%
-  mutate(zscore = (.$surface_area - mean(.$surface_area))/sd(.$surface_area)) %>%
-  filter(abs(zscore)<3)%>%
-  select(colony_id, surface_area)
 
 # CHLA
 chla <- read.csv('~/Desktop/GITHUB/TLPR21/CHL/TL_Trans_CHL_Results.csv') %>%

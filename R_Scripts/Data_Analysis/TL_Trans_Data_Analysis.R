@@ -251,5 +251,118 @@ ggsave("morph_OFRA_PP_PS_HW_pvalue.jpg", plot = plot_morph_OFRA_PP_PS  , path = 
        height = 6) 
 
 
+# Graphs for Carlos  ---------------------------------------------------
+#morphology - diameter
+# graph calice density 
+diameter <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=di, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Diameter (cm)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+Cdiameter <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=Cdi, fill=factor(group, level=measurement_order))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
+  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
+  labs(y= "Diameter (cm)", x = "Depth Treatment", fill='Origin') + 
+  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+diameter
+Cdiameter
+pairwise.wilcox.test(raw$di, raw$full_treatment, p.adjust.method="none")
+pairwise.wilcox.test(raw$Cdi, raw$full_treatment, p.adjust.method="none")
 
+both_diameters <- ggarrange(diameter,Cdiameter + rremove("ylab"), 
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1, 
+          common.legend = TRUE,
+          legend="right")
+ggsave("TL_Trans_combined_diameter_boxplot.jpg", both_diameters, path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 8,
+       height = 4)
+
+
+### JUST CONTROLS
+measurement_order2 <- c('OFAV','OFRA') 
+x_order <- c('OFAV_SS','OFAV_PP','OFRA_PP') 
+pj <- position_jitterdodge(jitter.width=0.1, seed=9,
+                           jitter.height = 0)
+treatment_comparisons2 <- list( c("OFAV_PP","OFRA_PP"), c("OFAV_SS","OFAV_PP"))
+controls <- raw %>%
+  filter(., full_treatment == "OFAV_PP" | full_treatment == "OFAV_SS" | full_treatment == "OFRA_PP")
+
+diameter2 <- ggplot(controls, aes(x=factor(full_treatment, level=x_order), y=di, fill=factor(species, level=measurement_order2))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#6060A8"), labels=c('OFAV', 'OFRA')) + 
+  scale_color_manual(values = c("#EBB134", "#EBB134", "#6060A8")) + 
+  labs(y= "Calice Diameter (cm)", x = "Depth Treatment", fill='Species') + 
+  scale_x_discrete(labels=c('Shallow', 'Deep', 'Deep')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons2, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+
+Cdiameter2 <- ggplot(controls, aes(x=factor(full_treatment, level=x_order), y=Cdi, fill=factor(species, level=measurement_order2))) +
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
+  scale_fill_manual(values = c("#EBB134", "#6060A8"), labels=c('OFAV', 'OFRA')) + 
+  scale_color_manual(values = c("#EBB134", "#EBB134", "#6060A8")) + 
+  labs(y= "Columella Diameter (cm)", x = "Depth Treatment", fill='Species') + 
+  scale_x_discrete(labels=c('Shallow', 'Deep', 'Deep')) + 
+  theme_classic() +
+  stat_compare_means(comparisons = treatment_comparisons2, method = "wilcox.test", 
+                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
+Cdiameter2
+
+both_diameters2 <- ggarrange(diameter2,Cdiameter2, 
+                            labels = c("A", "B"),
+                            ncol = 2, nrow = 1, 
+                            common.legend = TRUE,
+                            legend="right")
+both_diameters2
+ggsave("TL_Trans_combined_diameter_boxplot_controls.jpg", both_diameters2, path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 8,
+       height = 4)
+
+## OFAV ONLY CORRECTED COLORS
+measurement_order2 <- c('OFAV_SS','OFAV_PP') 
+x_order3 <- c('Cdi','di')
+pj <- position_jitterdodge(jitter.width=0.1, seed=9,
+                           jitter.height = 0)
+#treatment_comparisons3 <- list( c("OFAV_PP","OFAV_PP"), c("OFAV_SS","OFAV_SS"))
+
+#filter just control OFAVs
+control_OFAV <- raw %>%
+  filter(., full_treatment == "OFAV_PP" | full_treatment == "OFAV_SS") %>%
+  select(c(species,full_treatment,di,Cdi)) %>%
+  pivot_longer(.,c(Cdi,di), names_to = "measurement", values_to = "values")
+
+OFAV_controls_diameter <- ggplot(control_OFAV, aes(x=factor(measurement, level=x_order3), y=values, fill=factor(full_treatment, level=measurement_order2)))+ 
+  geom_boxplot(alpha=0.5, outlier.size=0) +
+  geom_point(aes(color=full_treatment), position = pj, size=1, show.legend = FALSE) +
+  scale_fill_manual(values = c("#a11d13","#6591ad"), labels=c('Shallow', 'Deep')) + 
+  scale_color_manual(values = c("#a11d13","#6591ad")) + 
+  labs(y= "Diameter (cm)", x = "", fill='Origin') + 
+  scale_x_discrete(labels=c('Columella','Calice')) + 
+  theme(
+    panel.background = element_rect(fill='transparent'), #transparent panel bg
+    plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+    panel.grid.major = element_blank(), #remove major gridlines
+    panel.grid.minor = element_blank(), #remove minor gridlines
+    legend.background = element_rect(fill='transparent'), #transparent legend bg
+    legend.box.background = element_rect(fill='transparent'),
+    axis.line.x = element_line(colour = "grey50"),
+    axis.line.y = element_line(colour = "grey50"))+ 
+  stat_compare_means(aes(group = full_treatment), method = "wilcox.test", label = "p.signif")
+
+
+OFAV_controls_diameter
+
+ggsave("TL_Trans_OFAV_controls_diameter.png", OFAV_controls_diameter, path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 8,
+       height = 4, bg = "transparent")
 

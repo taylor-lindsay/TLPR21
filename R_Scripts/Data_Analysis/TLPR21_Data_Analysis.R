@@ -19,12 +19,15 @@ library(ggpmisc)
 # Data -------------------------------------------------------------------
 
 raw <- read.csv('~/Desktop/GITHUB/TLPR21/TLPR21_Results.csv') %>%
-  select(depth, act_depth, species, site, colony_id, Host_AFDW_mg.cm2, Sym_AFDW_mg.cm2, sym.cm2, A,	CA,	di,	Cdi, A.CA,	D, chla.ug.cm2, chlc2.ug.cm2)
+  select(depth, act_depth, species, site, colony_id, Host_AFDW_mg.cm2, Sym_AFDW_mg.cm2, sym.cm2, A,	CA,	di,	Cdi,D, chla.ug.cm2, chlc2.ug.cm2)
 
 # make a table of means & SD 
 means <- raw %>%
-  group_by(species,site,depth) %>%
+  group_by(species,depth) %>%
   summarise(across(everything(), .f = list(mean = mean, sd = sd), na.rm = TRUE))
+
+# convert ft to m 
+raw <- mutate(raw, depth_m = act_depth*0.3048)
   
 # Define my groups for stat compare means 
 #treatment_comparisons <- list( c("OFAV_PS","OFAV_PP"), c("OFAV_SP","OFAV_SS"), c("OFRA_PP","OFRA_PS"))
@@ -32,124 +35,155 @@ means <- raw %>%
 # define formula
 formula <- y ~ x   
 
-# protein -------------------------------------------------------------------
-measurement_order <- c('OFAV_S','OFAV_P','OFRA_P') 
-x_order <- c('OFAV_SP','OFAV_SS','OFAV_PP', 'OFAV_PS', 'OFRA_PP', 'OFRA_PS') 
-pj <- position_jitterdodge(jitter.width=0.1, seed=9,
-                           jitter.height = 0)
 
-protein <- ggplot(raw, aes(x=factor(full_treatment, level=x_order), y=prot_mg.cm2, fill=factor(group, level=measurement_order))) +
-  geom_boxplot(alpha=0.5, outlier.size=0) +
-  geom_point(aes(color=factor(group, level=measurement_order)), position = pj, size=1, show.legend = FALSE)+
-  scale_fill_manual(values = c("#EBB134", "#ED6B5F", "#6060A8"), labels=c('OFAV Shallow', 'OFAV Deep', 'OFRA Deep')) + 
-  scale_color_manual(values = c("#EBB134", "#ED6B5F", "#6060A8")) + 
-  labs(y= "Protein (mg/cm2)", x = "Depth Treatment", fill='Origin') + 
-  scale_x_discrete(labels=c('Deep', 'Shallow', 'Deep', 'Shallow', 'Deep', 'Shallow')) + 
-  theme_classic() +
-  stat_compare_means(comparisons = treatment_comparisons, method = "t.test", 
-                     symnum.args = list(cutpoints = c(0, 0.001 ,0.01, 0.05, Inf), symbols = c("***", "**", "*", "")))
-protein
-ggsave("treatments_protein_pvalue.jpg", plot = protein , path = '~/Desktop/GITHUB/TLPR21/TL_Trans_Results/', width = 6,
-       height = 6)
+# summary stats table by kind ---------------------------------------------
+
+means_chl <- means %>%
+  select(species, depth_m, chla.ug.cm2_mean) %>%
+  filter(chla.ug.cm2_mean != 'NaN') %>%
+  pivot_wider(.,names_from = depth, values_from = chla.ug.cm2_mean) 
+  
+
+
+# protein -------------------------------------------------------------------
 
 # CHLA -------------------------------------------------------------------
-ggplot(raw, aes(x=act_depth, y=chla.ug.cm2)) +
+plot_chla <- ggplot(raw[!(is.na(raw$chla.ug.cm2)),], aes(x=depth_m, y=chla.ug.cm2)) +
   geom_point() +
   facet_wrap(~species, scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Chlorophyll a (ug/cm2)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
 
+ggsave("TLPR21_chla_plot.jpg", plot_chla, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
 
-# CHLC -------------------------------------------------------------------
-ggplot(raw, aes(x=act_depth, y=chlc2.ug.cm2)) +
+# CHLC2 -------------------------------------------------------------------
+plot_chlc2 <- ggplot(raw[!(is.na(raw$chlc2.ug.cm2)),], aes(x=depth_m, y=chlc2.ug.cm2)) +
   geom_point() +
   facet_wrap(~species,scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Chlorophyll c2 (ug/cm2)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggsave("TLPR21_chlc2_plot.jpg", plot_chlc2, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
 
 # sym counts -------------------------------------------------------------------
 
-ggplot(raw, aes(x=act_depth, y=sym.cm2)) +
+plot_sym <- ggplot(raw[!(is.na(raw$sym.cm2)),], aes(x=depth_m, y=sym.cm2)) +
   geom_point() +
   facet_wrap(~species,scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Symbiont Density (cells/cm2)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggsave("TLPR21_sym_plot.jpg", plot_sym, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
 
 # Host AFDW --------------------------------------------------------------------
 
-ggplot(raw, aes(x=act_depth, y=Host_AFDW_mg.cm2)) +
+plot_AFDW_host <- ggplot(raw[!(is.na(raw$Host_AFDW_mg.cm2)),], aes(x=depth_m, y=Host_AFDW_mg.cm2)) +
   geom_point() +
   facet_wrap(~species,scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Host Biomass (mg/cm2)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
 
+ggsave("TLPR21_AFDW_host_plot.jpg", plot_AFDW_host, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
 
 # Sym AFDW ----------------------------------------------------------------
 
-ggplot(raw, aes(x=act_depth, y=Sym_AFDW_mg.cm2)) +
+plot_AFDW_sym <- ggplot(raw[!(is.na(raw$Sym_AFDW_mg.cm2)),], aes(x=depth_m, y=Sym_AFDW_mg.cm2)) +
   geom_point() +
   facet_wrap(~species,scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Symbiont Biomass (mg/cm2)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggsave("TLPR21_AFDW_sym_plot.jpg", plot_AFDW_sym, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
 
 # Morphology -------------------------------------------------------------------
 
-ggplot(raw, aes(x=act_depth, y=di)) +
+plot_di <- ggplot(raw[!(is.na(raw$di)),], aes(x=depth_m, y=di)) +
   geom_point() +
   facet_wrap(~species,scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Columella diameter (cm)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
 
-ggplot(raw, aes(x=act_depth, y=Cdi)) +
-  geom_point() +
-  facet_wrap(~species,scales = "free") + 
-  geom_smooth(method=lm) +
-  stat_fit_glance(method = 'lm',
-                  method.args = list(formula = formula),
-                  geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+ggsave("TLPR21_columella_diameter_plot.jpg", plot_di, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
 
-ggplot(raw, aes(x=act_depth, y=A)) +
+plot_Cdi <- ggplot(raw[!(is.na(raw$Cdi)),], aes(x=depth_m, y=Cdi)) +
   geom_point() +
   facet_wrap(~species,scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Calice diameter (cm)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
 
-ggplot(raw, aes(x=act_depth, y=CA)) +
-  geom_point() +
-  facet_wrap(~species,scales = "free") + 
-  geom_smooth(method=lm) +
-  stat_fit_glance(method = 'lm',
-                  method.args = list(formula = formula),
-                  geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+ggsave("TLPR21_calice_diameter_plot.jpg", plot_Cdi, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
 
-ggplot(raw, aes(x=act_depth, y=D)) +
+plot_A <- ggplot(raw[!(is.na(raw$A)),], aes(x=depth_m, y=A)) +
   geom_point() +
   facet_wrap(~species,scales = "free") + 
   geom_smooth(method=lm) +
+  labs(y= "Columella area (cm2)", x = "Depth (m)") + 
   stat_fit_glance(method = 'lm',
                   method.args = list(formula = formula),
                   geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggsave("TLPR21_columella_area_plot.jpg", plot_A, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
+
+plot_CA <- ggplot(raw[!(is.na(raw$CA)),], aes(x=depth_m, y=CA)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  labs(y= "Calice area (cm2)", x = "Depth (m)") + 
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggsave("TLPR21_calice_area_plot.jpg", plot_CA, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
+
+plot_D <- ggplot(raw[!(is.na(raw$D)),], aes(x=depth_m, y=D)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  labs(y= "Calice density (calices/cm2)", x = "Depth (m)") + 
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggsave("TLPR21_calice_density_plot.jpg", plot_D, path = '~/Desktop/GITHUB/TLPR21/TLPR21_Results/', width = 8,
+       height = 4)
+

@@ -1,0 +1,200 @@
+---
+title: "TLPR21_Data_Analysis.rmd"
+author: "Taylor Lindsay"
+date: "2023-09-10"
+output:
+  pdf_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE,message=FALSE)
+```
+
+\newpage
+# Summary & Terms 
+This document shows the results from a depth gradient sampling poject in Puerto Rico. 
+
+### Sites: 
+- Turrumote 
+- Media Luna 
+
+### Species
+- MCAV
+- PPOR
+- PAST
+- CNAT
+- AAGA
+- OFRA
+- OFAV
+
+# Load libraries: Done  
+```{r libraries & imports, include=FALSE}
+# Libraries 
+library(tidyverse)
+library(dplyr)
+library(ggpubr)
+library(ggplot2)
+library(ggpmisc)
+```
+
+```{r data, include=FALSE, fig.height = 4, fig.width = 6, fig.align = "center", fig.show="hold"}
+raw <- read.csv('~/Desktop/GITHUB/TLPR21/TLPR21_Results.csv') %>%
+  select(depth, act_depth, species, site, colony_id, Host_AFDW_mg.cm2, Sym_AFDW_mg.cm2, sym.cm2, A,	CA,	di,	Cdi,D, chla.ug.cm2, chlc2.ug.cm2)
+
+# make a table of means & SD 
+means <- raw %>%
+  group_by(species,depth) %>%
+  summarise(across(everything(), .f = list(mean = mean, sd = sd), na.rm = TRUE))
+  
+# Define my groups for stat compare means 
+#treatment_comparisons <- list( c("OFAV_PS","OFAV_PP"), c("OFAV_SP","OFAV_SS"), c("OFRA_PP","OFRA_PS"))
+
+# define formula
+formula <- y ~ x   
+```
+
+\newpage
+**Chlorophyll a**
+```{r chla, fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+means %>%
+  select(species, depth, chla.ug.cm2_mean) %>%
+  filter(chla.ug.cm2_mean != 'NaN') %>%
+  pivot_wider(.,names_from = depth, values_from = chla.ug.cm2_mean) 
+
+ggplot(raw, aes(x=act_depth, y=chla.ug.cm2)) +
+  geom_point() +
+  facet_wrap(~species, scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+``` 
+
+\newpage
+**Chlorophyll c2**
+```{r chlc2,fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+ggplot(raw, aes(x=act_depth, y=chlc2.ug.cm2)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+``` 
+
+\newpage
+**Symbiont Density**
+```{r sym, fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+
+ggplot(raw, aes(x=act_depth, y=sym.cm2)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+``` 
+
+\newpage
+**AFDW host**
+```{r AFDW host, fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+
+ggplot(raw, aes(x=act_depth, y=Host_AFDW_mg.cm2)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+``` 
+
+\newpage
+**AFDW sym**
+```{r AFDW sym, fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+
+ggplot(raw, aes(x=act_depth, y=Sym_AFDW_mg.cm2)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+``` 
+
+\newpage
+**Calice Density**
+```{r density,fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+
+ggplot(raw, aes(x=act_depth, y=D)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+``` 
+
+\newpage
+**Calice & Columella diameter**
+```{r diameter, fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+
+ggplot(raw, aes(x=act_depth, y=di)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggplot(raw, aes(x=act_depth, y=Cdi)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+
+``` 
+
+\newpage
+**Calice & Columella area**
+```{r area, fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+ggplot(raw, aes(x=act_depth, y=A)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+ggplot(raw, aes(x=act_depth, y=CA)) +
+  geom_point() +
+  facet_wrap(~species,scales = "free") + 
+  geom_smooth(method=lm) +
+  stat_fit_glance(method = 'lm',
+                  method.args = list(formula = formula),
+                  geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value.., digits = 4), sep = "")), size = 2)
+
+``` 
+
+\newpage
+**Protein**
+```{r protein, fig.height = 5, fig.width = 7, fig.align = "center", fig.show="hold"}
+``` 
+
+
